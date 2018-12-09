@@ -1,7 +1,7 @@
-#!/usr/bin/python
-from scrappers.reddit import RedditScrapper
+import scrappers.reddit
 
-scrapper = RedditScrapper()
+
+scrapper = scrappers.reddit.RedditScrapper()
 scrapper.connect()
 scrapper.create_dirs()
 scrapper.create_sub_files()
