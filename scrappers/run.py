@@ -1,6 +1,9 @@
 #!/usr/bin/python
-from .reddit import RedditScrapper
+from scrappers.reddit import RedditScrapper
 
 scrapper = RedditScrapper()
 scrapper.connect()
-scrapper.start(silent=True)
+scrapper.create_dirs()
+scrapper.create_sub_files()
+
+scrapper.start(silent=False)

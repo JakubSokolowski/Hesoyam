@@ -237,10 +237,3 @@ class RedditScrapper:
 
     def get_sub_data_path(self, sub_name: str):
         return self.data_path + sub_name + '/' + sub_name + "_submissions" + '.csv'
-
-
-scrapper = RedditScrapper()
-scrapper.connect()
-scrapper.create_dirs()
-scrapper.create_sub_files()
-scrapper.start()
