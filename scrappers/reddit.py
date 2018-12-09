@@ -31,9 +31,14 @@ class RedditScrapper:
         self.reddit = None
         self.data_path = str(Path(__file__).parents[1]) + '/data/'
         self.connected = False
+        self.silent = True
         return
 
     def connect(self):
+        """
+        Connects to reddit using credentials, and returns praw.Reddit instance
+        :return:
+        """
         self.reddit = praw.Reddit(client_id=self.creds['client_id'],
                                   client_secret=self.creds['client_secret'],
                                   password=self.creds['password'],
@@ -161,13 +166,26 @@ class RedditScrapper:
         return
 
     def update_submissions(self, sub_name: str, rows: []):
+        """
+        Writes submissions data in rows[] list to submission file specified by sub_name
+        :param sub_name:
+        :param rows:
+        :return:
+        """
         path = self.data_path + sub_name + "/" + sub_name + "_submissions.csv"
         with open(path, 'a') as file:
             writer = csv.writer(file, delimiter='|')
             writer.writerows(rows)
 
     def scrap_sub(self, sub_name: str):
-        print("Starting scrapping sub: ", sub_name)
+        """
+        Gets all the available submissions from subreddit specified by sub_name
+        and saves them to submission file
+        :param sub_name:
+        :return:
+        """
+        if not self.silent:
+            print("Starting scrapping sub: ", sub_name)
         scraping_start = time.time()
         blacklist = self.load_blacklist(sub_name)
         saved_submission_ids = []
@@ -179,29 +197,39 @@ class RedditScrapper:
                 saved_submission_ids.append(submission.id)
                 saved_submissions.append(row)
                 end = time.time()
-                message = "Scrapped submission: " \
-                          + "ID: " + row[0]\
-                          + " Title: " + self.format_title(row[2])\
-                          + " in " + str(end-start)
-                print(message)
+                if not self.silent:
+                    message = "Scrapped submission: " \
+                              + "ID: " + row[0] \
+                              + " Title: " + self.format_title(row[2]) \
+                              + " in " + str(end - start)
+                    print(message)
         self.update_submissions(sub_name, saved_submissions)
         self.update_blacklist(sub_name, saved_submission_ids)
         scraping_end = time.time()
-        message = "Scraped /r/" + sub_name + " in " + str(scraping_end-scraping_start)
-        print(message)
+        if not self.silent:
+            message = "Scraped /r/" + sub_name + " in " + str(scraping_end - scraping_start)
+            print(message)
         return
 
-    def start(self):
+    def start(self, silent: bool):
+        """
+        Starts scraping subreddits
+        :param silent:
+        :return:
+        """
+        self.silent = silent
         self.create_dirs()
         start = time.time()
         for sub_name in self.config['subreddits']:
             self.scrap_sub(sub_name)
         end = time.time()
-        message = "Finished scrapping subs in : " + str(datetime.timedelta(seconds=(end-start)))
-        print(message)
+        if not self.silent:
+            message = "Finished scrapping subs in : " + str(datetime.timedelta(seconds=(end - start)))
+            print(message)
         return
 
-    def format_title(self, title: str):
+    @staticmethod
+    def format_title(title: str):
         if len(title) > 70:
             return title[:64] + "\t [...]"
         else:
@@ -216,5 +244,3 @@ scrapper.connect()
 scrapper.create_dirs()
 scrapper.create_sub_files()
 scrapper.start()
-
-
