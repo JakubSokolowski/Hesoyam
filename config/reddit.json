@@ -1,22 +1,72 @@
 {
-  "subreddits": [
-    "ArkEcosystem",
-    "batproject",
-    "eos",
-    "ethereum",
-    "icon",
-    "Monero",
-    "omise_go",
-    "Ripple",
-    "Stellar",
-    "Tronix",
-    "Vechain",
-    "vergecurrency",
-    "zec",
-    "bitcoin",
-    "chainlink",
-    "cryptocurrency",
-    "btc",
-    "cryptomarkets"
-  ]
+    "subreddits": [
+        {
+            "name": "ArkEcosystem",
+            "currentAfterDate": 1546723535
+        },
+        {
+            "name": "batproject",
+            "currentAfterDate": 1546637519
+        },
+        {
+            "name": "ethereum",
+            "currentAfterDate": 1546724677
+        },
+        {
+            "name": "icon",
+            "currentAfterDate": 1546444857
+        },
+        {
+            "name": "Monero",
+            "currentAfterDate": 1546720721
+        },
+        {
+            "name": "omise_go",
+            "currentAfterDate": 1546685693
+        },
+        {
+            "name": "Ripple",
+            "currentAfterDate": 1546719714
+        },
+        {
+            "name": "Stellar",
+            "currentAfterDate": 1546720817
+        },
+        {
+            "name": "Tronix",
+            "currentAfterDate": 1546721024
+        },
+        {
+            "name": "Vechain",
+            "currentAfterDate": 1546702568
+        },
+        {
+            "name": "vergecurrency",
+            "currentAfterDate": 1546648915
+        },
+        {
+            "name": "zec",
+            "currentAfterDate": 1546640067
+        },
+        {
+            "name": "bitcoin",
+            "currentAfterDate": 1546723828
+        },
+        {
+            "name": "chainlink",
+            "currentAfterDate": 1546681925
+        },
+        {
+            "name": "cryptocurrency",
+            "currentAfterDate": 1546724794
+        },
+        {
+            "name": "btc",
+            "currentAfterDate": 1546723087
+        },
+        {
+            "name": "cryptomarkets",
+            "currentAfterDate": 1546721411
+        }
+    ]
 }
