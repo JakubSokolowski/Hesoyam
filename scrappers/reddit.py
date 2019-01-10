@@ -20,7 +20,6 @@ submission_header = [
     "permalink",
     "num_comments",
     "comments"
-
 ]
 
 
@@ -52,8 +51,8 @@ class RedditScrapper:
         Creates all the directories for subs specified in config
         :return:
         """
-        for sub_name in self.config['subreddits']:
-            path = self.data_path + sub_name
+        for sub in self.config['subreddits']:
+            path = self.data_path + sub['name']
             if not os.path.exists(path):
                 os.makedirs(path)
         return
@@ -63,9 +62,10 @@ class RedditScrapper:
         Creates all the submission and blacklist files for each directory
         :return:
         """
-        for sub_name in self.config['subreddits']:
-            submissions_file = self.data_path + sub_name + "/" + sub_name + "_submissions.csv"
-            blacklist_file = self.data_path + sub_name + "/" + sub_name + "_blacklist.csv"
+        for sub in self.config['subreddits']:
+            name = sub['name']
+            submissions_file = self.data_path + name + "/" + name + "_submissions.csv"
+            blacklist_file = self.data_path + name + "/" + name + "_blacklist.csv"
             if not os.path.isfile(blacklist_file):
                 file = open(blacklist_file, 'a+')
                 writer = csv.writer(file, delimiter='|')
@@ -194,6 +194,7 @@ class RedditScrapper:
             if submission.id not in blacklist:
                 start = time.time()
                 row = self.process_submission(sub_name, submission)
+
                 saved_submission_ids.append(submission.id)
                 saved_submissions.append(row)
                 end = time.time()
@@ -220,8 +221,8 @@ class RedditScrapper:
         self.silent = silent
         self.create_dirs()
         start = time.time()
-        for sub_name in self.config['subreddits']:
-            self.scrap_sub(sub_name)
+        for sub in self.config['subreddits']:
+            self.scrap_sub(sub['name'])
         end = time.time()
         if not self.silent:
             message = "Finished scrapping subs in : " + str(datetime.timedelta(seconds=(end - start)))
