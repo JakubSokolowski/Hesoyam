@@ -10,6 +10,7 @@ import pymongo
 from db import dbmanager as dbm
 from datetime import datetime as dt
 from pathlib import Path
+from pymongo import UpdateOne
 
 query_template = "https://api.pushshift.io/reddit/search/submission/?" \
                  "subreddit={}&" \
@@ -22,6 +23,17 @@ def chunks(l, n):
         yield l[i:i + n]
 
 
+def get_remote_client():
+    creds = m.get_credentials('mongo')
+    connection_str = "mongodb://{}:{}@{}/{}".format(
+        creds['user'],
+        creds['password'],
+        creds['ip'],
+        creds['db_name']
+    )
+    return MongoClient(connection_str)
+
+
 class HistoricalRedditScrapper:
     def __init__(self):
         self.config = m.get_config('reddit')
@@ -29,6 +41,7 @@ class HistoricalRedditScrapper:
         self.start_date = '1451606400'
         self.silent = False
         self.db = dbm.DataBaseManager()
+        self.client = get_remote_client()
 
     @staticmethod
     def make_request(query: str):
@@ -120,7 +133,8 @@ class HistoricalRedditScrapper:
         ids = self.get_comment_ids(submission_id)
         if len(ids) == 0:
             return {}
-        print("Submission {} Num comments {}".format(submission_id, len(ids)))
+        start = time.time()
+        print("\tSubmission {} Num comments {}".format(submission_id, len(ids)))
         query = "https://api.pushshift.io/reddit/comment/search?ids="
         data = []
         try:
@@ -130,6 +144,8 @@ class HistoricalRedditScrapper:
                 data = data + HistoricalRedditScrapper.make_request(query)['data']
         except HTTPError:
             return data
+        end = time.time()
+        print("\tScrapped in: {}".format(datetime.timedelta(seconds=(end - start))))
         return data
 
     def get_comment_ids(self, submission_id: str):
@@ -147,24 +163,84 @@ class HistoricalRedditScrapper:
                 if post['num_comments'] < 6:
                     post['comments'] = []
                     post['comments_scrapped'] = 1
+                    start = time.time()
                     collection.save(post)
+                    end = time.time()
+                    print("\tUpdated in: {}".format(datetime.timedelta(seconds=(end - start))))
                     continue
                 if 'comments' not in post:
                     comments = self.get_comments(post['id'])
                     post['comments'] = comments
                     post['comments_scrapped'] = 1
+                    start = time.time()
                     collection.save(post)
+                    end = time.time()
+                    print("\tUpdated in: {}".format(datetime.timedelta(seconds=(end - start))))
                 else:
                     if post['comments_scrapped'] == 0:
                         comments = self.get_comments(post['id'])
                         post['comments'] = comments
                         post['comments_scrapped'] = 1
+                        start = time.time()
                         collection.save(post)
+                        end = time.time()
+                        print("\tUpdated in: {}".format(datetime.timedelta(seconds=(end - start))))
+
+    def remote_test(self):
+        creds = m.get_credentials('mongo')
+        connection_str = "mongodb://{}:{}@{}/{}".format(
+            creds['user'],
+            creds['password'],
+            creds['ip'],
+            creds['db_name']
+        )
+        client = MongoClient(connection_str)
+        print(client['reddit'].collection_names(()))
+
+    def get_comments_from_sub(self, sub_name: str, skip: int = 0):
+        client = get_remote_client()
+        collection = client.reddit[sub_name + '_history']
+        count = collection.count()
+        print("Connected!")
+        processed = 0
+        operations = []
+        for post in collection.find({}, no_cursor_timeout=True, batch_size=1000, skip=skip):
+            processed += 1
+            print("Searching for comments for post {} from sub {}. Processed {}/{}."
+                  .format(post['id'], sub_name, processed, count))
+            if post['num_comments'] < 6:
+                post['comments'] = []
+                post['comments_scrapped'] = 1
+            if 'comments' not in post or post['comments_scrapped'] == 0:
+                comments = self.get_comments(post['id'])
+                post['comments'] = comments
+                post['comments_scrapped'] = 1
+            else:
+                continue
+            operations.append(UpdateOne({'id': post['id']}, {'$set': {
+                        'comments': post['comments'],
+                        'comments_scrapped': post['comments_scrapped']
+                    }}))
+
+            if len(operations) == 100:
+                start = time.time()
+                result = collection.bulk_write(operations)
+                end = time.time()
+                print("\tUpdated in: {}".format(datetime.timedelta(seconds=(end - start))))
+                print(result.bulk_api_result)
+                operations = []
+        if len(operations) > 0:
+            collection.bulk_write(operations)
+
+
+    def process_bulk(self, skip: int, limit: int):
+        return
 
 
 scrapper = HistoricalRedditScrapper()
 # print(scrapper.get_comment_ids_as_str("6xjaba"))
 # print(scrapper.get_comments("6xjaba"))
-scrapper.get_all_comments()
+# scrapper.get_all_comments()
+scrapper.get_comments_from_sub('Bitcoin')
 # print(len(scrapper.get_comments("4oiqj7")))
 # db.ArkEcosystem_history.find( { id: { $eq: "570e0o" } } )
