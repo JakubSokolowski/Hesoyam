@@ -1,4 +1,3 @@
-import csv
 import urllib.request
 import json
 from urllib.error import HTTPError
@@ -6,8 +5,6 @@ from pymongo import MongoClient
 import credsmanager as m
 import time
 import datetime
-import pymongo
-from db import dbmanager as dbm
 from datetime import datetime as dt
 from pathlib import Path
 from pymongo import UpdateOne
@@ -23,12 +20,12 @@ def chunks(l, n):
         yield l[i:i + n]
 
 
-def get_remote_client():
+def get_remote_client(local: bool = False):
     creds = m.get_credentials('mongo')
     connection_str = "mongodb://{}:{}@{}/{}".format(
         creds['user'],
         creds['password'],
-        creds['ip_local'],
+        creds['ip_local'] if local else creds['ip'],
         creds['db_name']
     )
     return MongoClient(connection_str)
@@ -40,8 +37,7 @@ class HistoricalRedditScrapper:
         self.data_path = str(Path(__file__).parents[1]) + '/data_history/'
         self.start_date = '1451606400'
         self.silent = False
-        self.db = dbm.DataBaseManager()
-        self.client = get_remote_client()
+        self.client = get_remote_client(True)
 
     @staticmethod
     def make_request(query: str):
@@ -241,6 +237,6 @@ scrapper = HistoricalRedditScrapper()
 # print(scrapper.get_comment_ids_as_str("6xjaba"))
 # print(scrapper.get_comments("6xjaba"))
 # scrapper.get_all_comments()
-scrapper.get_comments_from_sub('Bitcoin')
+scrapper.get_comments_from_sub('Bitcoin', skip=100000)
 # print(len(scrapper.get_comments("4oiqj7")))
 # db.ArkEcosystem_history.find( { id: { $eq: "570e0o" } } )
