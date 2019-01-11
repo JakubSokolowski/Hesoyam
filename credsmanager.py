@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-credentials_path = '/home/jakub/dev/repos/Hesoyam/credentials.json'
+credentials_path = str(Path(__file__).parent) + '/credentials.json'
 config_path = str(Path(__file__).parent) + '/config/'
 
 
@@ -10,6 +10,7 @@ def get_credentials(site_name: str):
         creds = json.load(f)
     return {
         'reddit': creds['reddit'],
+        'mongo': creds['mongo'],
     }.get(site_name, {})
 
 

@@ -9,26 +9,37 @@ from datetime import datetime as dt
 from pathlib import Path
 from pymongo import UpdateOne
 
+
 query_template = "https://api.pushshift.io/reddit/search/submission/?" \
                  "subreddit={}&" \
                  "after={}&" \
                  "sort=asc&limit={}"
-
 
 def chunks(l, n):
     for i in range(0, len(l), n):
         yield l[i:i + n]
 
 
-def get_remote_client(local: bool = False):
+def get_remote_client(server_type: str):
     creds = m.get_credentials('mongo')
+    server_type = get_server_adress(server_type)
     connection_str = "mongodb://{}:{}@{}/{}".format(
         creds['user'],
         creds['password'],
-        creds['ip_local'] if local else creds['ip'],
+        server_type,
         creds['db_name']
     )
     return MongoClient(connection_str)
+
+
+def get_server_adress(host: str):
+    creds = m.get_credentials('mongo')
+    if host == 'local_network':
+        return creds['ip_local']
+    if host == 'localhost':
+        return 'localhost'
+    if host == 'public':
+        return creds['ip']
 
 
 class HistoricalRedditScrapper:
@@ -194,11 +205,11 @@ class HistoricalRedditScrapper:
         print(client['reddit'].collection_names(()))
 
     def get_comments_from_sub(self, sub_name: str, skip: int = 0):
-        client = get_remote_client()
+        client = get_remote_client('localhost')
         collection = client.reddit[sub_name + '_history']
         count = collection.count()
         print("Connected!")
-        processed = 0
+        processed = skip
         operations = []
         for post in collection.find({}, no_cursor_timeout=True, batch_size=10000, skip=skip):
             processed += 1
