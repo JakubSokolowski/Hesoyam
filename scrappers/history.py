@@ -5,15 +5,16 @@ from pymongo import MongoClient
 import credsmanager as m
 import time
 import datetime
+import logging
 from datetime import datetime as dt
 from pathlib import Path
 from pymongo import UpdateOne
-
 
 query_template = "https://api.pushshift.io/reddit/search/submission/?" \
                  "subreddit={}&" \
                  "after={}&" \
                  "sort=asc&limit={}"
+
 
 def chunks(l, n):
     for i in range(0, len(l), n):
@@ -222,16 +223,21 @@ class HistoricalRedditScrapper:
             if post['num_comments'] < 6:
                 post['comments'] = []
                 post['comments_scrapped'] = 1
-            if 'comments' not in post or post['comments_scrapped'] == 0:
-                comments = self.get_comments(post['id'])
-                post['comments'] = comments
-                post['comments_scrapped'] = 1
-            else:
+            try:
+                if 'comments' not in post or post['comments_scrapped'] == 0:
+                    comments = self.get_comments(post['id'])
+                    post['comments'] = comments
+                    post['comments_scrapped'] = 1
+                else:
+                    continue
+                operations.append(UpdateOne({'id': post['id']}, {'$set': {
+                    'comments': post['comments'],
+                    'comments_scrapped': post['comments_scrapped']
+                }}))
+            except:
+                logging.exception('')
+                time.sleep(10)
                 continue
-            operations.append(UpdateOne({'id': post['id']}, {'$set': {
-                'comments': post['comments'],
-                'comments_scrapped': post['comments_scrapped']
-            }}))
 
             if len(operations) == 100:
                 start = time.time()
