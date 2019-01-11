@@ -28,7 +28,7 @@ def get_remote_client():
     connection_str = "mongodb://{}:{}@{}/{}".format(
         creds['user'],
         creds['password'],
-        creds['ip'],
+        creds['ip_local'],
         creds['db_name']
     )
     return MongoClient(connection_str)
@@ -191,7 +191,7 @@ class HistoricalRedditScrapper:
         connection_str = "mongodb://{}:{}@{}/{}".format(
             creds['user'],
             creds['password'],
-            creds['ip'],
+            creds['ip_local'],
             creds['db_name']
         )
         client = MongoClient(connection_str)
@@ -204,10 +204,14 @@ class HistoricalRedditScrapper:
         print("Connected!")
         processed = 0
         operations = []
-        for post in collection.find({}, no_cursor_timeout=True, batch_size=1000, skip=skip):
+        for post in collection.find({}, no_cursor_timeout=True, batch_size=10000, skip=skip):
             processed += 1
-            print("Searching for comments for post {} from sub {}. Processed {}/{}."
-                  .format(post['id'], sub_name, processed, count))
+            print("Searching for comments for post {} from sub {} from date {}. Processed {}/{}."
+                  .format(post['id']
+                          , sub_name
+                          , dt.utcfromtimestamp(post['created_utc'])
+                          , processed
+                          , count))
             if post['num_comments'] < 6:
                 post['comments'] = []
                 post['comments_scrapped'] = 1
@@ -218,9 +222,9 @@ class HistoricalRedditScrapper:
             else:
                 continue
             operations.append(UpdateOne({'id': post['id']}, {'$set': {
-                        'comments': post['comments'],
-                        'comments_scrapped': post['comments_scrapped']
-                    }}))
+                'comments': post['comments'],
+                'comments_scrapped': post['comments_scrapped']
+            }}))
 
             if len(operations) == 100:
                 start = time.time()
@@ -231,10 +235,6 @@ class HistoricalRedditScrapper:
                 operations = []
         if len(operations) > 0:
             collection.bulk_write(operations)
-
-
-    def process_bulk(self, skip: int, limit: int):
-        return
 
 
 scrapper = HistoricalRedditScrapper()
