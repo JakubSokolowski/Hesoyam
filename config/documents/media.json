@@ -1,0 +1,14 @@
+{
+  "missingDataPeriods": [
+    {
+      "dateFrom": 123,
+      "dateTo": 123
+    }
+  ],
+  "scrappingOngoingPeriods": [
+    {
+      "dataFrom": 123,
+      "dateTo": 123
+    }
+  ]
+}

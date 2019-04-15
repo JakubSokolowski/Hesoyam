@@ -1,5 +1,6 @@
 import urllib.request
 import json
+from typing import Any
 from urllib.error import HTTPError
 from pymongo import MongoClient
 import credsmanager as m
@@ -21,9 +22,9 @@ def chunks(l, n):
         yield l[i:i + n]
 
 
-def get_remote_client(server_type: str):
+def get_remote_client(server_type: str) -> MongoClient:
     creds = m.get_credentials('mongo')
-    server_type = get_server_adress(server_type)
+    server_type = get_server_address(server_type)
     connection_str = "mongodb://{}:{}@{}/{}".format(
         creds['user'],
         creds['password'],
@@ -33,7 +34,7 @@ def get_remote_client(server_type: str):
     return MongoClient(connection_str)
 
 
-def get_server_adress(host: str):
+def get_server_address(host: str) -> str:
     creds = m.get_credentials('mongo')
     if host == 'local_network':
         return creds['ip_local']
@@ -49,10 +50,10 @@ class HistoricalRedditScrapper:
         self.data_path = str(Path(__file__).parents[1]) + '/data_history/'
         self.start_date = '1451606400'
         self.silent = False
-        self.client = get_remote_client(True)
+        self.client = get_remote_client('localhost')
 
     @staticmethod
-    def make_request(query: str):
+    def make_request(query: str) -> Any:
         """
         Sends query to pushift.io api
         :param query:
@@ -61,11 +62,11 @@ class HistoricalRedditScrapper:
         with urllib.request.urlopen(query) as url:
             return json.loads(url.read().decode())
 
-    def scrap_all(self):
+    def scrap_all(self) -> None:
         for sub in self.config['subreddits']:
             self.scrap_sub(sub['name'])
 
-    def scrap_sub(self, sub_name: str):
+    def scrap_sub(self, sub_name: str) -> Any:
         index = self.get_sub_index(sub_name)
         if self.sub_first_scrap(index):
             self.update_after_date(index, self.start_date)
@@ -86,7 +87,7 @@ class HistoricalRedditScrapper:
         if not self.silent:
             print("Finished scrapping {} in {}".format(sub_name, timestamp))
 
-    def scrap_sub_after_date(self, index: int, date: str, limit: int = 1000):
+    def scrap_sub_after_date(self, index: int, date: str, limit: int = 1000) -> Any:
         """
         Scraps all the submissions from subreddit specified by sub_name that
         were made after specified date
@@ -105,16 +106,16 @@ class HistoricalRedditScrapper:
             self.print_summary(data, timestamp)
         return data
 
-    def sub_first_scrap(self, index: int):
+    def sub_first_scrap(self, index: int) -> bool:
         return 'currentAfterDate' not in self.config['subreddits'][index]
 
-    def update_after_date(self, index: int, new_after_date: str):
+    def update_after_date(self, index: int, new_after_date: str) -> None:
         self.config['subreddits'][index]['currentAfterDate'] = new_after_date
 
-    def get_after_date(self, index: int):
+    def get_after_date(self, index: int) -> str:
         return self.config['subreddits'][index]['currentAfterDate']
 
-    def get_sub_index(self, sub_name: str):
+    def get_sub_index(self, sub_name: str) -> int:
         for index, item in enumerate(self.config['subreddits']):
             if item['name'] == sub_name:
                 break
@@ -122,14 +123,13 @@ class HistoricalRedditScrapper:
             index = -1
         return index
 
-    def print_summary(self, scrapped_data, time_elapsed):
+    def print_summary(self, scrapped_data, time_elapsed) -> None:
         if self.silent:
             return
         size = len(scrapped_data)
         from_date = dt.utcfromtimestamp(scrapped_data[0]['created_utc'])
         to_date = dt.utcfromtimestamp(scrapped_data[-1]['created_utc'])
-        print("Scrapped {} submissions from {} to {} in {}".
-              format(size, from_date, to_date, time_elapsed))
+        print("Scrapped {} submissions from {} to {} in {}".format(size, from_date, to_date, time_elapsed))
 
     def update_submissions(self, scrapped_data, sub_name: str):
         self.db.update_db('reddit', sub_name + "_history", scrapped_data)

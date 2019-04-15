@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 
 credentials_path = str(Path(__file__).parent) + '/credentials.json'
+data_path = str(Path(__file__).parent) + '/data/'
 config_path = str(Path(__file__).parent) + '/config/'
 
 

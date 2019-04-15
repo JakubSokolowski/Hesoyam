@@ -1,0 +1,17 @@
+{
+  "meta": {
+    "genesisDate": 1234
+  },
+  "exchanges": {
+    "coinmarketcap": {}
+  },
+  "people": {
+    "devs": {},
+    "shills": [],
+    "affiliated": []
+  },
+  "media": {
+    "reddit": {},
+    "twitter": {}
+  }
+}

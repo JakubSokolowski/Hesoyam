@@ -1,0 +1,22 @@
+{
+  "orderbook": {
+    "snapshots": [],
+    "deltas": []
+  },
+  "wallets": {
+
+  },
+  "price": {
+    "daily": [
+        {
+          "open": 123,
+        "high": 123,
+        "low": 123,
+        "close": 132,
+        "volume": 123,
+        "timestamp": 123
+        }
+      ],
+    "hourly": []
+  }
+}

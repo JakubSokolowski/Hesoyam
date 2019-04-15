@@ -33,16 +33,18 @@ class RedditScrapper:
         self.silent = True
         return
 
-    def connect(self):
+    def connect(self) -> None:
         """
         Connects to reddit using credentials, and returns praw.Reddit instance
         :return:
         """
-        self.reddit = praw.Reddit(client_id=self.creds['client_id'],
-                                  client_secret=self.creds['client_secret'],
-                                  password=self.creds['password'],
-                                  user_agent=self.creds['user_agent'],
-                                  username=self.creds['username'])
+        self.reddit = praw.Reddit(
+            client_id=self.creds['client_id'],
+            client_secret=self.creds['client_secret'],
+            password=self.creds['password'],
+            user_agent=self.creds['user_agent'],
+            username=self.creds['username']
+        )
         print("Connected as: ", self.reddit.user.me())
         self.connected = True
 
